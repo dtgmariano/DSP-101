@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Example_2833xAdcSoc</name>
+	<name>Example_2833xAdcToDMA</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -56,6 +56,11 @@
 			<name>DSP2833x_ADC_cal.asm</name>
 			<type>1</type>
 			<locationURI>INSTALLROOT_2833X_V131/DSP2833x_common/source/DSP2833x_ADC_cal.asm</locationURI>
+		</link>
+		<link>
+			<name>DSP2833x_DMA.c</name>
+			<type>1</type>
+			<locationURI>INSTALLROOT_2833X_V131/DSP2833x_common/source/DSP2833x_DMA.c</locationURI>
 		</link>
 		<link>
 			<name>DSP2833x_GlobalVariableDefs.c</name>

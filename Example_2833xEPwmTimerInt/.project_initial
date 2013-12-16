@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Example_2833xAdcSoc</name>
+	<name>Example_2833xEPwmTimerInt</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -28,11 +28,6 @@
 			<locationURI>INSTALLROOT_2833X_V131/DSP2833x_common/source/DSP2833x_PieCtrl.c</locationURI>
 		</link>
 		<link>
-			<name>DSP2833x_Adc.c</name>
-			<type>1</type>
-			<locationURI>INSTALLROOT_2833X_V131/DSP2833x_common/source/DSP2833x_Adc.c</locationURI>
-		</link>
-		<link>
 			<name>DSP2833x_usDelay.asm</name>
 			<type>1</type>
 			<locationURI>INSTALLROOT_2833X_V131/DSP2833x_common/source/DSP2833x_usDelay.asm</locationURI>
@@ -46,6 +41,11 @@
 			<name>DSP2833x_Headers_nonBIOS.cmd</name>
 			<type>1</type>
 			<locationURI>INSTALLROOT_2833X_V131/DSP2833x_headers/cmd/DSP2833x_Headers_nonBIOS.cmd</locationURI>
+		</link>
+		<link>
+			<name>DSP2833x_CpuTimers.c</name>
+			<type>1</type>
+			<locationURI>INSTALLROOT_2833X_V131/DSP2833x_common/source/DSP2833x_CpuTimers.c</locationURI>
 		</link>
 		<link>
 			<name>DSP2833x_PieVect.c</name>

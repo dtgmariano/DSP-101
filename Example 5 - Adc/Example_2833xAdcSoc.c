@@ -82,7 +82,7 @@ void Config_ADC(void);
   int j,segundos_count;
 
 
-main()
+void main(void)
 {
    phase=0;
    w=2*3.1415927*100; // Frequencia fundamental do sinal gerado = 100Hz
@@ -156,7 +156,7 @@ main()
    GpioDataRegs.GPACLEAR.bit.GPIO31 = 1;   // Reset output latch -  Turn on LED1
    GpioCtrlRegs.GPAMUX2.bit.GPIO31  = 0;   // GPIO31 = GPIO31
    GpioCtrlRegs.GPADIR.bit.GPIO31   = 1;   // GPIO31 = output
-   
+
    GpioDataRegs.GPBCLEAR.bit.GPIO34 = 1;   // Reset output latch -  Turn on LED2
    GpioCtrlRegs.GPBMUX1.bit.GPIO34  = 0;   // GPIO34 = GPIO34
    GpioCtrlRegs.GPBDIR.bit.GPIO34   = 1;   // GPIO34 = output
@@ -197,7 +197,7 @@ void Toggle_LED1(void)
   {
    GpioDataRegs.GPATOGGLE.bit.GPIO31 = 1;
   }
-  
+
 void Toggle_LED2(void)
   {
    GpioDataRegs.GPBTOGGLE.bit.GPIO34 = 1;
