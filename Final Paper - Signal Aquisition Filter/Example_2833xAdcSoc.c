@@ -1,66 +1,3 @@
-// ADC_teste.c
-// Baseado no exemplo do headers 131 - Example_2833xAdc.c
-//###########################################################################
-//
-// ASSUMPTIONS:
-//
-//   This program requires the DSP2833x header files.
-//
-//   Make sure the CPU clock speed is properly defined in
-//   DSP2833x_Examples.h before compiling this example.
-//
-//   Connect signals to be converted to A2 and A3.
-//
-//    As supplied, this project is configured for "boot to SARAM"
-//    operation.  The 2833x Boot Mode table is shown below.
-//    For information on configuring the boot mode of an eZdsp,
-//    please refer to the documentation included with the eZdsp,
-//
-//       $Boot_Table:
-//
-//         GPIO87   GPIO86     GPIO85   GPIO84
-//          XA15     XA14       XA13     XA12
-//           PU       PU         PU       PU
-//        ==========================================
-//            1        1          1        1    Jump to Flash
-//            1        1          1        0    SCI-A boot
-//            1        1          0        1    SPI-A boot
-//            1        1          0        0    I2C-A boot
-//            1        0          1        1    eCAN-A boot
-//            1        0          1        0    McBSP-A boot
-//            1        0          0        1    Jump to XINTF x16
-//            1        0          0        0    Jump to XINTF x32
-//            0        1          1        1    Jump to OTP
-//            0        1          1        0    Parallel GPIO I/O boot
-//            0        1          0        1    Parallel XINTF boot
-//            0        1          0        0    Jump to SARAM	    <- "boot to SARAM"
-//            0        0          1        1    Branch to check boot mode
-//            0        0          1        0    Boot to flash, bypass ADC cal
-//            0        0          0        1    Boot to SARAM, bypass ADC cal
-//            0        0          0        0    Boot to SCI-A, bypass ADC cal
-//                                              Boot_Table_End$
-//
-// DESCRIPTION:
-//
-//   This example sets up the PLL in x10/2 mode.
-//
-//   For 150 MHz devices (default)
-//   divides SYSCLKOUT by six to reach a 25.0Mhz HSPCLK
-//   (assuming a 30Mhz XCLKIN).
-//
-//   Interrupts are enabled and the ePWM1 is setup to generate a periodic
-//   ADC SOC on SEQ1. Two channels are converted, ADCINA0 and ADCINA1.
-//
-//   Watch Variables:
-//
-//         Voltage1[100]     Last 100 ADCRESULT0 values
-//         Voltage2[100]     Last 100 ADCRESULT1 values
-//         ConversionCount  Current result number 0-99
-//         LoopCount        Idle loop counter
-//
-//
-//###########################################################################
-
 #include "DSP28x_Project.h"     // Device Headerfile and Examples Include File
 #include <math.h>
 
@@ -70,24 +7,26 @@ void Toggle_LED1(void);
 void Toggle_LED2(void);
 void InitEPwm1Example(void);
 void Config_ADC(void);
+
+
 #define N 32
 #define sizeArray 100
 
+#define freqAmostragem 10000
+
 // Global variables used in this example:
-  int Voltage1[100];
-  int Voltage2[100];
-  float PWM_signal[100];
-  int  ConversionCount;
-  float phase,w, Ts;
-  float amplitude;
-  int comparacao,offset, A3,tensao;
-  int j,segundos_count;
+int Voltage1[sizeArray], Voltage2[sizeArray];
+float PWM_signal[sizeArray];
 
-  float X[sizeArray];
-  float Y[sizeArray];
-  float yn = 0;
+int  ConversionCount;
+float phase,w, Ts;
+float amplitude;
+int comparacao,offset, A3,tensao;
+int j,segundos_count;
 
-  float h[N] = {0.01088851098307,  0.00826166872286,  0.01108546704709,  0.01428820677656,
+float X[sizeArray], Y[sizeArray];
+float yn = 0;
+float h[N] = {	0.01088851098307,  0.00826166872286,  0.01108546704709,  0.01428820677656,
 				0.01782254652812,  0.02161186645364,  0.02556816195059,  0.02960025792067,
 				0.03359639112285,  0.03743328713064,  0.04099288718132,  0.04417223870103,
 				0.04684548673088,  0.04894102049304,  0.05037578751974,  0.05110892113801,
@@ -95,7 +34,7 @@ void Config_ADC(void);
 				0.04417223870103,  0.04099288718132,  0.03743328713064,  0.03359639112285,
 				0.02960025792067,  0.02556816195059,  0.02161186645364,  0.01782254652812,
 				0.01428820677656,  0.01108546704709,  0.00826166872286,  0.01088851098307};
-  float x[N] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+float x[N] = {	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 main()
 {
@@ -108,7 +47,6 @@ main()
 
 // Step 1.
    InitSysCtrl();
-
 
 // Step 2. Initialize GPIO:
 // This example function is found in the DSP2833x_Gpio.c file and
@@ -160,13 +98,13 @@ main()
 
   //Configure ePWM-1 pins using GPIO regs
   //Enable internal pull-up for the selected pins */
-    GpioCtrlRegs.GPAPUD.bit.GPIO0 = 0;    // Enable pull-up on GPIO0 (EPWM1A)
-    GpioCtrlRegs.GPAPUD.bit.GPIO1 = 0;    // Enable pull-up on GPIO1 (EPWM1B)
+   GpioCtrlRegs.GPAPUD.bit.GPIO0 = 0;    // Enable pull-up on GPIO0 (EPWM1A)
+   GpioCtrlRegs.GPAPUD.bit.GPIO1 = 0;    // Enable pull-up on GPIO1 (EPWM1B)
 
-    GpioCtrlRegs.GPAMUX1.bit.GPIO0 = 1;   // Configure GPIO0 as EPWM1A
-    GpioCtrlRegs.GPAMUX1.bit.GPIO1 = 1;   // Configure GPIO1 as EPWM1B
+   GpioCtrlRegs.GPAMUX1.bit.GPIO0 = 1;   // Configure GPIO0 as EPWM1A
+   GpioCtrlRegs.GPAMUX1.bit.GPIO1 = 1;   // Configure GPIO1 as EPWM1B
 
-    EDIS;
+   EDIS;
 
 // Enable ADCINT in PIE
    PieCtrlRegs.PIEIER1.bit.INTx6 = 1;
@@ -175,30 +113,32 @@ main()
    ERTM;          // Enable Global realtime interrupt DBGM
 
 // Wait for ADC interrupt
-    ConversionCount = 0;
-    A3=0; //Amplitude do terceiro harmônico
-     while(1) //loop infinito
-   {
-    asm(" NOP");
-    if(segundos_count >=2)
-           {
-         	segundos_count=0;     //Zera contador de segundos
-         	ConversionCount = 0;  // habilita gravação da aquisição nos vetores a cada 2 segundos
-         	A3=A3+200; //Incrementa amplitude do terceiro harmônico - sinal de controle PWM
-         	if (A3>=2000)  A3=0;
-           }
-   }
+   ConversionCount = 0;
 
+   while(1) //loop infinito
+   {
+	   asm(" NOP");
+	   if(segundos_count >=2)
+	   {
+		   segundos_count=0;     //Zera contador de segundos
+		   ConversionCount = 0;  // habilita gravação da aquisição nos vetores a cada 2 segundos
+		   A3=A3+200; //Incrementa amplitude do terceiro harmônico - sinal de controle PWM
+		   if (A3>=2000)
+			   A3=0;
+	   }
+   }
 }
+
 void Toggle_LED1(void)
-  {
+{
    GpioDataRegs.GPATOGGLE.bit.GPIO31 = 1;
-  }
+}
 
 void Toggle_LED2(void)
-  {
+{
    GpioDataRegs.GPBTOGGLE.bit.GPIO34 = 1;
-  }
+}
+
 
 void InitEPwm1Example(void)
 {
@@ -260,50 +200,66 @@ void Config_ADC(void)
 
 interrupt void  adc_isr(void)
 {
-  if(ConversionCount < 100)
-      {
-       Voltage1[ConversionCount] = AdcRegs.ADCRESULT0 - 0x8000; //Convert amostras Q15/16-bits  (p.u.)
-       Voltage2[ConversionCount] = AdcRegs.ADCRESULT1 - 0x8000; //Convert amostras Q15/16-bits  (p.u.)
-       PWM_signal[ConversionCount]= amplitude;
-       ConversionCount++;
-      }
-      else  GpioDataRegs.GPBCLEAR.bit.GPIO34 = 1;   // Turn on LED2 - fim do  preenchimento dos vetores de amostras
+	if(ConversionCount < sizeArray)
+    {
+		Voltage1[ConversionCount] = AdcRegs.ADCRESULT0 - 0x8000; //Convert amostras Q15/16-bits  (p.u.)
+        //Voltage2[ConversionCount] = AdcRegs.ADCRESULT1 - 0x8000; //Convert amostras Q15/16-bits  (p.u.)
+        //PWM_signal[ConversionCount]= amplitude;
+        ConversionCount++;
+    }
+    else
+    {
+    	ConversionCount = 0;
+    	GpioDataRegs.GPBCLEAR.bit.GPIO34 = 1;   // Turn on LED2 - fim do  preenchimento dos vetores de amostras
+    }
 
-   // Update the CMPA and CMPB values
-  // phase=phase + w*Ts; //integral de w
-//   if (phase > 6.2831853) phase=phase-6.2831853;
-//   amplitude=sin(phase)*4500 + sin(3*phase)*A3; // Calculo do sinal a ser modulado em ePWM1 (A3=terceito harmonico)
-//   comparacao =(int)amplitude;
-     tensao= AdcRegs.ADCRESULT0 - 0x8000;
-     amplitude=(float)tensao/5.0;
-     comparacao =(int)amplitude;
-   EPwm1Regs.CMPA.half.CMPA = comparacao + offset;
-   EPwm1Regs.CMPB= offset - comparacao;               // Saida B em 180 graus com saida A
+	j++;
+	if(j==10000)
+	{
+		j=0;
+	    segundos_count++;
+	    Toggle_LED1();
+	}
 
-   	   //j++;
-   	   //if(j==10000)
-   	   //{
-   	//	   j=0;
-//   	   }
+	/*
+	int i;
+	for(i=0; i<sizeArray; i++)
+	{
+		int k;                                      //  Alternative implementation
+	    for(k=0; k < N-1; k++)               //  for(int k=N-1; k>0; k--)
+	    {                                        //  {
+	    	x[N-k-1] = x[N-k-2];//shift the data   //    x[k] = x[k-1];
+	    }                                        //  }
 
+	    x[0] = Voltage1[i]; // move input sample to buffer
+	    yn = 0; // clear output sample
 
-   	   if(tensao>14000)
-   	   {
-   		   	GpioDataRegs.GPASET.bit.GPIO31 = 1;
-   		    GpioDataRegs.GPBCLEAR.bit.GPIO34 = 1;
-   	   }
-   	   else
-   	   {
-   		   	GpioDataRegs.GPACLEAR.bit.GPIO31 = 1;
-   		    GpioDataRegs.GPBSET.bit.GPIO34 = 1;
-   	   }
+	    for(k=0; k < N; k++)
+	    {
+	        yn += h[k]*x[k]; // multiply data on coefficients with accumulation
+	    }
 
-  // Reinitialize for next ADC sequence
-  AdcRegs.ADCTRL2.bit.RST_SEQ1 = 1 ;        // reset sequencer to state CONV00 - pag. 35 SPRU812A.pdf
-  AdcRegs.ADCST.bit.INT_SEQ1_CLR = 1;       // Clear INT SEQ1 bit
-  PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;   // Acknowledge interrupt to PIE
+	    Y[i] = yn;
+    }
+	*/
 
-  return;
+    tensao= AdcRegs.ADCRESULT0 - 0x8000;
+    amplitude=(float)tensao/5.0;
+    comparacao =(int)amplitude;
+    EPwm1Regs.CMPA.half.CMPA = comparacao + offset;
+    EPwm1Regs.CMPB= offset - comparacao;
+
+   	if(tensao>14000)
+   		GpioDataRegs.GPASET.bit.GPIO31 = 1;
+   	else
+   		GpioDataRegs.GPACLEAR.bit.GPIO31 = 1;
+
+//  Reinitialize for next ADC sequence
+    AdcRegs.ADCTRL2.bit.RST_SEQ1 = 1 ;        // reset sequencer to state CONV00 - pag. 35 SPRU812A.pdf
+    AdcRegs.ADCST.bit.INT_SEQ1_CLR = 1;       // Clear INT SEQ1 bit
+    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;   // Acknowledge interrupt to PIE
+
+    return;
 }
 
 
